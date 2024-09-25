@@ -1,0 +1,189 @@
+{{define "templates/pan/mdui/view-base.html"}}
+<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
+    <meta name="renderer" content="webkit"/>
+    {{- if or (eq $.account.Mode "aliyundrive") (eq $.account.Mode "aliyundrive-share") ($.search_key)}}
+    <meta name="referrer" content="no-referrer">
+    {{- end}}
+    <meta name="force-rendering" content="webkit"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    {{- if ne $.config.FaviconUrl ""}}
+    <link rel="icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+    {{- else}}
+    <link rel="icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
+    {{- end}}
+    <link rel="stylesheet" href="{{index $.config.CdnFiles "mdui@css"}}"/>
+    <script src="{{index $.config.CdnFiles "mdui@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "jquery@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "cookie@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "md5@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "marked@js"}}"></script>
+    <script src="{{index $.config.CdnFiles "clipboard@js"}}"></script>
+    <script src="{{$.config.PathPrefix}}/api/v3/public/config.js"></script>
+    <script src="{{index $.config.CdnFiles "mdui@index@js"}}?v={{$.version}}"></script>
+    {{- if ne $.config.Js ""}}
+    {{$.config.Js | unescaped}}
+    {{- end}}
+    <link rel="stylesheet" href="{{index $.config.CdnFiles "mdui@index@css"}}?v={{$.version}}">
+    {{- if ne $.config.Css ""}}
+    {{$.config.Css | unescaped}}
+    {{- end}}
+    <title>{{- if eq $.config.SiteName ""}}
+        {{$.title}}
+        {{- else}}
+        {{$.config.SiteName}}
+        {{- end}} {{ .Path }}
+    </title>
+</head>
+<body class="mdui-theme-layout-{{- if eq $.theme "mdui"}}auto{{end}}{{- if eq $.theme "mdui-dark"}}dark{{- end}}{{- if eq $.theme "mdui-light"}}light{{- end}}">
+<div class="mdui-container">
+    <div class="mdui-card">
+        <div class="mdui-card-content" style="padding: 0">
+            <div style="padding: 0px 5px 12px;">
+                <div class="mdui-chip">
+                    <span class="mdui-chip-icon mdui-color-indigo" {{- if gt (len $.accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#account-menu'}"{{- end}}><i class="mdui-icon material-icons">home</i></span>
+                    {{- if gt (len $.accounts) 1 }}
+                    <ul class="mdui-menu" id="account-menu">
+                        {{range $i, $a := $.accounts}}
+                        <li class="mdui-menu-item">
+                            <a href="{{$.config.PathPrefix}}/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{if eq $a.Mode "cloud189"}}cyan{{else}}{{end}}{{if eq $a.Mode "onedrive"}}blue-200{{else}}{{end}}{{if eq $a.Mode "teambition"}}blue{{else}}{{end}}{{if eq $a.Mode "teambition-us"}}blue{{else}}{{end}}{{if eq $a.Mode "native"}}blue-grey{{else}}{{end}}{{if eq $a.Mode "aliyundrive"}}deep-purple-accent{{else}}{{end}}">face</i>{{.Name}}</a>
+                        </li>
+                        {{- end}}
+                    </ul>
+                    {{- end}}
+                    <span class="mdui-chip-title" onclick="window.open('{{$.config.PathPrefix}}/','_self')">
+						{{- if eq $.config.SiteName ""}}
+							{{$.title}}
+						{{- else}}
+							{{$.config.SiteName}}
+						{{- end}}
+					</span>
+                </div>
+                {{- if or ($.is_admin_login) (eq $.config.Access "0") (eq $.config.Access "3")}}
+                {{$lenPaths := len $.pre_paths}}
+                {{- range $index, $item := $.pre_paths}}
+                    {{- if and (eq (len $.accounts) 1) (eq $.config.AccountChoose "default")}}
+                        {{- if gt $index 0}}
+                            <i class="mdui-icon material-icons mdui-icon-dark nav">chevron_right</i>
+                            <div class="mdui-chip nav" onclick="window.open('{{$.config.PathPrefix}}{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
+                                <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
+                            </div>
+                        {{- end}}
+                    {{- else}}
+                        <i class="mdui-icon material-icons mdui-icon-dark nav">chevron_right</i>
+                        <div class="mdui-chip nav" onclick="window.open('{{$.config.PathPrefix}}{{.PathUrl}}{{if and (not (index $.fns 0).IsFolder) ((isLast $index $lenPaths))}}?v{{end}}','_self')">
+                            <span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{.PathName}}">{{.PathName}}</span>
+                        </div>
+                    {{- end}}
+                {{- end}}
+                {{- end}}
+            </div>
+            <ul class="mdui-list">
+                <li class="mdui-list-item">
+                    <div class="mdui-list-item-content">
+                        <div class="mdui-list-item-title">
+                            {{- if and ($.has_parent) (or ($.is_admin_login) (eq $.config.Access "0") (eq $.config.Access "3"))}}
+                                <button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '返回上级目录'}" onclick="window.open('{{$.config.PathPrefix}}{{$.parent_path}}','_self')"><i class="mdui-icon material-icons">arrow_back</i></button>
+                            {{- end}}
+                            {{- if not $.has_pwd}}<a id="info-toggle" href="javascript:void(0)" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '文件信息'}"><i class="mdui-icon material-icons">info</i></a>{{- end}}
+                            {{- if $.is_admin_login}}<a id="share" href="javascript:void(0)" mdui-menu="{target: '#share-menu',covered: false}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '分享'}"><i class="mdui-icon material-icons">share</i></a>{{- end}}
+                            {{- if not $.has_pwd}}<a id="view_down_link" href="javascript:void(0)" data-path="{{$.config.PathPrefix}}{{ (index $.fns 0).Path }}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '点击下载'}"><i class="mdui-icon material-icons">file_download</i></a>{{- end}}
+                            {{- if and ($.last_file) (or ($.is_admin_login) (eq $.config.Access "0") (eq $.config.Access "3"))}}
+                                <a id="view_last" href="{{$.config.PathPrefix}}{{$.last_file}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '上一个'}"><i class="mdui-icon material-icons">chevron_leftt</i></a>
+                            {{- end}}
+                            {{- if and ($.next_file) (or ($.is_admin_login) (eq $.config.Access "0") (eq $.config.Access "3"))}}
+                                <a id="view_next" href="{{$.config.PathPrefix}}{{$.next_file}}?v" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '下一个'}"><i class="mdui-icon material-icons">chevron_right</i></a>
+                            {{- end}}
+                            <button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq $.theme "mdui-dark"}}5{{else}}4{{end}}</i></button>
+                            <button class="mdui-btn mdui-btn-icon" id="history_play_list_btn" mdui-menu="{target: '#history_play_list_menu'}" mdui-tooltip="{content: '播放历史'}" style="display: none"><i class="mdui-icon material-icons">playlist_play</i></button>
+                            <ul class="mdui-menu mdui-menu-cascade" id="history_play_list_menu"></ul>
+                            <ul id="share-menu" class="mdui-menu" data-fp="{{ $.full_path }}"  data-file-type="1" data-aid="{{ $.account.Id }}">
+                                <li class="mdui-divider"></li>
+                                <li class="mdui-menu-item">
+                                    <img id="qrcode" src="" width="100%" />
+                                </li>
+                                <li class="mdui-divider"></li>
+                                <li class="mdui-menu-item mdui-text-center">
+                                    <button id="copyShortUrl" class="mdui-btn mdui-btn-raised mdui-ripple mdui-btn-dense mdui-color-indigo">复制短链接</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <div class="mdui-card" style="width: 100%">
+                {{- if $.has_pwd}}
+                <div class="mdui-card-media mdui-center" style="width: 350px; max-width: 100%;">
+                    <div class="mdui-textfield mdui-textfield-floating-label{{if $.pwd_err_msg}} mdui-textfield-invalid{{- end}}">
+                        <i id="inpsw-icon-lock" class="mdui-icon material-icons">lock</i>
+                        <label class="mdui-textfield-label">请输入密码</label>
+                        <input id="input-password" type="password" class="mdui-textfield-input" data-file-path="{{ $.pwd_path }}" required style="border-bottom: 1px solid rgba(0, 0, 0, 0.42); width: calc(100% - 95px);">
+                        <a class="mdui-btn mdui-btn-icon mdui-icon" style="right: 0px;" href="javascript:promptPwd();">
+                            <i class="mdui-icon material-icons" style="padding: 0px;">fingerprint</i>
+                        </a>
+                        {{- if $.pwd_err_msg}}
+                        <div class="mdui-textfield-error">{{$.pwd_err_msg}}</div>
+                        <script>
+                            removePwd()
+                        </script>
+                        {{- end}}
+                    </div>
+                </div>
+                {{- else}}
+                <div class="mdui-card-primary mdui-typo mdui-collapse" id="info_panel" style="padding-top: 0px">
+                    <div class="mdui-collapse-item mdui-collapse-item-o" id="item-1">
+                        <div class="mdui-collapse-item-body">
+                            <div class="mdui-typo-body-1-opacity"><b>名称：</b>{{ (index $.fns 0).FileName }}</div>
+                            <div class="mdui-typo-body-1-opacity"><b>大小：</b>{{ (index $.fns 0).SizeFmt }}</div>
+                            <div class="mdui-typo-body-1-opacity"><b>日期：</b>{{ (index $.fns 0).LastOpTime }}</div>
+                            <!--<div class="mdui-typo-body-1-opacity"><b>文件ID：</b>{{ (index $.fns 0).FileId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).FileId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
+                            <div class="mdui-typo-body-1-opacity"><b>目录ID：</b>{{ (index $.fns 0).ParentId }} <a href="javascript:void(0)" data-content="{{ (index $.fns 0).ParentId }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>-->
+                            <div class="mdui-typo-body-1-opacity"><b>链接：</b><a id="file_link" href="javascript:void(0)" data-path="{{$.config.PathPrefix}}{{ (index $.fns 0).Path }}"></a> <a href="javascript:void(0)" data-content="{{$.config.PathPrefix}}{{ (index $.fns 0).Path }}" data-clipboard-action="copy" class="copyIDBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: 14px">content_copy</a></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    {{- if (index $.fns 0).FileType}}
+                    {{- if contains $.config.Image (index $.fns 0).FileType}}
+                    {{block "content-img" .}}{{end}}
+                    {{- else if contains $.config.Audio (index $.fns 0).FileType}}
+                    {{block "content-audio" .}}{{end}}
+                    {{- else if contains $.config.Video (index $.fns 0).FileType}}
+                    {{block "content-video" .}}{{end}}
+                    {{- else if contains $.config.Code (index $.fns 0).FileType}}
+                    {{block "content-code" .}}{{end}}
+                    {{- else if contains $.config.Doc (index $.fns 0).FileType}}
+                    {{block "content-office" .}}{{end}}
+                    {{- else if eq "pdf" (index $.fns 0).FileType}}
+                    {{block "content-pdf" .}}{{end}}
+                    {{- else if eq "epub" (index $.fns 0).FileType}}
+                    {{block "content-epub" .}}{{end}}
+                    {{- else if eq "md" (index $.fns 0).FileType}}
+                    {{block "content-md" .}}{{end}}
+                    {{- else}}
+                    {{block "content-ns" .}}{{end}}
+                    {{- end}}
+                    {{- else}}
+                    {{block "content-ns" .}}{{end}}
+                    {{- end}}
+                </div>
+                {{- end}}
+            </div>
+        </div>
+    </div>
+    <div class="mdui-text-center mdui-typo">
+        {{- if eq $.config.Footer ""}}
+        ©{{Year}} <a href="https://github.com/px-org/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
+        {{- else}}
+        {{$.config.Footer | unescaped}}
+        {{- end}}
+    </div>
+</div>
+</body>
+</html>
+{{end}}

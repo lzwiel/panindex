@@ -1,0 +1,79 @@
+{{define "templates/pan/mdui/view-audio.html"}}
+    {{template "templates/pan/mdui/view-base.html" .}}
+{{end}}
+{{define "content-audio"}}
+    <link rel="stylesheet" href="{{index $.config.CdnFiles "APlayer@css"}}">
+    <div class="mdui-valign" style="min-height: 300px">
+        <div id="aplayer" class="mdui-center" style="width: 500px" data-lrc-path="{{$.config.LrcPath}}" data-enable-lrc="{{$.config.EnableLrc}}"></div>
+    </div>
+    <script src="{{index $.config.CdnFiles "APlayer@js"}}"></script>
+    <script>
+        var path = $("#view_down_link").attr("data-path");
+        var enableLrc = $("#aplayer").attr("data-enable-lrc");
+        var lrcPath = $("#aplayer").attr("data-lrc-path");
+        var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + path);
+        var n = '{{ (index $.fns 0).FileName }}';
+        var formData = new FormData();
+        formData.append("path", "{{$.parent_path}}");
+        formData.append("viewType", "audio");
+        formData.append("sortColumn", Cookies.get("sort_column"));
+        formData.append("sortOrder", Cookies.get("sort_order"));
+        var playList = [];
+        var index = 0;
+        $.ajax({
+            method: 'POST',
+            url: "{{$.config.PathPrefix}}/api/v3/public/files", //上传文件的请求路径必须是绝对路劲
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            success: function (data) {
+                var lrcType = 0
+                if(enableLrc == "1"){
+                    lrcType = 3;
+                }
+                $.each(data.data, function(i, item){
+                    if(item.file_name == n){
+                        index = i;
+                    }
+                    var v = {};
+                    var vname = item.file_name.split(".")[0];
+                    var ns = vname.split("-");
+                    if(ns.length > 1){
+                        v.artist = ns[0];
+                        v.name = ns[1];
+                    }else{
+                        v.name = vname;
+                        v.artist = '艺术家';
+                    }
+                    v.url = item.file_name;
+                    v.cover = '{{$.config.PathPrefix}}/static/img/music-cover.png';
+                    if(enableLrc == "1"){
+                        v.lrc = lrcPath + vname + '.lrc';
+                    }
+                    playList.push(v)
+                });
+                const ap = new APlayer({
+                    container: document.getElementById('aplayer'),
+                    mini: false,
+                    autoplay: false,
+                    listFolded: false,
+                    listMaxHeight: 200,
+                    preload: 'auto',
+                    loop: 'all',
+                    order: 'list',
+                    lrcType: lrcType,
+                    audio: playList
+                });
+                ap.list.switch(index);
+                if($('body').hasClass('mdui-theme-layout-dark')){
+                    $(".aplayer-title").css("color", "#666");
+                    $(".aplayer-list-title").css("color", "#666");
+                }else{
+                    $(".aplayer-title").css("color", "");
+                    $(".aplayer-list-title").css("color", "");
+                }
+            }
+        });
+    </script>
+{{end}}

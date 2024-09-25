@@ -1,0 +1,354 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no"/>
+	<meta name="renderer" content="webkit"/>
+	{{- if or (eq $.account.Mode "aliyundrive") (eq $.account.Mode "aliyundrive-share") ($.search_key)}}
+	<meta name="referrer" content="no-referrer">
+	{{- end}}
+	<meta name="force-rendering" content="webkit"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+	{{- if ne $.config.FaviconUrl ""}}
+	<link rel="icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+	<link rel="shortcut icon" href="{{$.config.FaviconUrl}}" type="image/x-icon" />
+	{{- else}}
+	<link rel="icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
+	<link rel="shortcut icon" href="{{$.config.PathPrefix}}/static/img/favicon-{{$.account.Mode}}.ico" type="image/x-icon" />
+	{{- end}}
+	<link rel="stylesheet" href="{{index $.config.CdnFiles "mdui@css"}}"/>
+	<link rel="stylesheet" href="{{index $.config.CdnFiles "viewer@css"}}">
+	<script src="{{index $.config.CdnFiles "mdui@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "jquery@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "cookie@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "md5@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "marked@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "viewer@js"}}"></script>
+	<script src="{{index $.config.CdnFiles "clipboard@js"}}"></script>
+	<script src="{{$.config.PathPrefix}}/api/v3/public/config.js"></script>
+	<script src="{{index $.config.CdnFiles "mdui@index@js"}}?v={{$.version}}"></script>
+	{{- if ne $.config.Js ""}}
+	{{$.config.Js | unescaped}}
+	{{- end}}
+	<link rel="stylesheet" href="{{index $.config.CdnFiles  "Material+Icons@css"}}">
+	<link rel="stylesheet" href="{{index $.config.CdnFiles "mdui@index@css"}}?v={{$.version}}">
+	{{- if ne $.config.Css ""}}
+	{{$.config.Css | unescaped}}
+	{{- end}}
+	<title>{{- if eq $.config.SiteName ""}}
+		{{$.title}}
+		{{- else}}
+		{{$.config.SiteName}}
+		{{- end}} {{ .Path }}
+	</title>
+</head>
+<body class="mdui-theme-layout-{{- if eq $.theme "mdui"}}auto{{end}}{{- if eq $.theme "mdui-dark"}}dark{{- end}}{{- if eq $.theme "mdui-light"}}light{{- end}}">
+<div class="mdui-container" >
+	<div class="mdui-card">
+		<div class="mdui-card-content" style="padding: 0">
+			<div style="padding: 0px 5px 12px;">
+				<div class="mdui-chip">
+					<span class="mdui-chip-icon mdui-color-indigo" {{- if gt (len $.accounts) 1 }}mdui-tooltip="{content: '用户切换', position: 'top'}" mdui-menu="{target: '#account-menu'}"{{- end}}><i class="mdui-icon material-icons">home</i></span>
+					{{- if gt (len $.accounts) 1 }}
+					<ul class="mdui-menu" id="account-menu">
+						{{range $i, $a := $.accounts}}
+						{{$color := ""}}
+						{{- if eq $a.Mode "cloud189" }}
+						{{ $color = "cyan" }}
+						{{- else if eq $a.Mode "onedrive" }}
+						{{ $color = "blue-200" }}
+						{{- else if eq $a.Mode "onedrive" }}
+						{{ $color = "blue-200" }}
+						{{- else if eq $a.Mode "onedrive-cn" }}
+						{{ $color = "blue-200" }}
+						{{- else if eq $a.Mode "teambition" }}
+						{{ $color = "blue" }}
+						{{- else if eq $a.Mode "teambition-us" }}
+						{{ $color = "blue" }}
+						{{- else if eq $a.Mode "native" }}
+						{{ $color = "blue-grey" }}
+						{{- else if eq $a.Mode "aliyundrive" }}
+						{{ $color = "deep-purple-accent" }}
+						{{- else if eq $a.Mode "webdav" }}
+						{{ $color = "brown" }}
+						{{- else if eq $a.Mode "yun139" }}
+						{{ $color = "pink" }}
+						{{- else if eq $a.Mode "googledrive" }}
+						{{ $color = "amber" }}
+						{{- else if eq $a.Mode "s3" }}
+						{{ $color = "orange" }}
+						{{- else if eq $a.Mode "pikpak" }}
+						{{ $color = "indigo" }}
+						{{- else if eq $a.Mode "123" }}
+						{{ $color = "light-blue" }}
+						{{- else if eq $a.Mode "115" }}
+						{{ $color = "blue-900" }}
+						{{- else if eq $a.Mode "aliyundrive-share" }}
+						{{ $color = "deep-purple-accent" }}
+						{{- end}}
+						<li class="mdui-menu-item">
+							<a href="{{$.config.PathPrefix}}/{{.Name}}" class="mdui-ripple"><i class="mdui-menu-item-icon mdui-icon material-icons mdui-text-color-{{$color}}">face</i>{{.Name}}</a>
+						</li>
+						{{- end}}
+					</ul>
+					{{- end}}
+					<span class="mdui-chip-title" onclick="window.open('{{$.config.PathPrefix}}/','_self')">
+						{{- if eq $.config.SiteName ""}}
+							{{$.title}}
+						{{- else}}
+							{{$.config.SiteName}}
+						{{- end}}
+					</span>
+				</div>
+				{{- range $i, $a := $.pre_paths}}
+					{{- if and (eq (len $.accounts) 1) (eq $.config.AccountChoose "default")}}
+						{{- if gt $i 0}}
+							<i class="mdui-icon material-icons mdui-icon-dark nav">chevron_right</i>
+							<div class="mdui-chip nav" onclick="window.open('{{$.config.PathPrefix}}{{$a.PathUrl}}','_self')">
+								<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{$a.PathName}}">{{$a.PathName}}</span>
+							</div>
+						{{- end}}
+					{{- else}}
+						<i class="mdui-icon material-icons mdui-icon-dark nav">chevron_right</i>
+						<div class="mdui-chip nav" onclick="window.open('{{$.config.PathPrefix}}{{$a.PathUrl}}','_self')">
+							<span class="mdui-chip-title mdui-text-truncate" style="max-width: 200px;" title="{{$a.PathName}}">{{$a.PathName}}</span>
+						</div>
+					{{- end}}
+				{{- end}}
+			</div>
+			{{- if and (not $.has_pwd) (eq $.config.Head "1")}}
+			<div id="headContent" class="md-content mdui-typo mdui-shadow-2" style="display: none;padding:15px;margin: 10px;">
+				<div class="mdui-chip readme">
+					<span class="mdui-chip-icon">H</span>
+					<span class="mdui-chip-title">HEAD.md</span>
+				</div>
+				<hr class="readme" />
+				<script>
+					var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "{{$.config.PathPrefix}}/api/v3/public/raw{{$.account_path}}{{$.path}}/HEAD.md");
+					if("{{$.path}}" == "/"){
+						fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "{{$.config.PathPrefix}}/api/v3/public/raw{{$.account_path}}{{$.path}}HEAD.md");
+					}
+					var hKey = md5(fullUrl);
+					var hc = localStorage.getItem(hKey);
+					if(hc && hc != null && hc != ""){
+						$("#headContent").append(marked.parse(hc));
+						$("table").addClass("mdui-table");
+						$("#headContent").toggle();
+						mdContent(fullUrl, hKey, "headContent", false);
+					}else{
+						mdContent(fullUrl, hKey, "headContent", true);
+					}
+
+				</script>
+			</div>
+			{{- end}}
+			<ul class="mdui-list">
+				<li class="mdui-list-item">
+					<div class="mdui-list-item-content">
+						<div class="mdui-list-item-title">
+							<div class="mdui-textfield mdui-textfield-expandable mdui-float-right">
+								<button class="mdui-textfield-icon mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></button>
+								<input type="text" placeholder="搜索文件（夹）" class="search 	mdui-textfield-input search-input" value="{{$.search_key}}">
+								<button class="mdui-textfield-close mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">close</i></button>
+							</div>
+							<div>
+								{{- if $.has_parent}}
+								<button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '返回上级目录'}" onclick="window.open('{{$.config.PathPrefix}}{{$.parent_path}}','_self')"><i class="mdui-icon material-icons">arrow_back</i></button>
+								{{- end}}
+								<ul class="mdui-menu mdui-menu-cascade" id="sort-menu" style="max-width: 220px;max-height: 500px;">
+									<li class="mdui-menu-item">
+										<a href="javascript:void(0);" class="mdui-ripple column" data-column="file_name">
+											文件名
+											<span class="mdui-menu-item-more"></span>
+										</a>
+										<ul class="mdui-menu mdui-menu-cascade" style="max-width: 140px">
+											<li class="mdui-menu-item" style="min-width: 60px">
+												<a href="javascript:;" class="mdui-ripple sort-order-check" data-column="file_name" data-order="asc">
+													升序
+												</a>
+												<a href="javascript:;" class="mdui-ripple sort-order-check" data-column="file_name" data-order="desc">
+													降序
+												</a>
+											</li>
+										</ul>
+									</li>
+									<li class="mdui-menu-item">
+										<a href="javascript:void(0);" class="mdui-ripple column" data-column="file_size">
+											大小
+											<span class="mdui-menu-item-more"></span>
+										</a>
+										<ul class="mdui-menu mdui-menu-cascade" style="max-width: 140px">
+											<li class="mdui-menu-item" style="min-width: 60px">
+												<a href="javascript:;" class="mdui-ripple sort-order-check" data-column="file_size" data-order="asc">
+													升序
+												</a>
+												<a href="javascript:;" class="mdui-ripple sort-order-check" data-column="file_size" data-order="desc">
+													降序
+												</a>
+											</li>
+										</ul>
+									</li>
+									<li class="mdui-menu-item">
+										<a href="javascript:void(0);" class="mdui-ripple column" data-column="last_op_time">
+											时间
+											<span class="mdui-menu-item-more"></span>
+										</a>
+										<ul class="mdui-menu mdui-menu-cascade" style="max-width: 140px">
+											<li class="mdui-menu-item" style="min-width: 60px">
+												<a href="javascript:;" class="mdui-ripple sort-order-check" data-column="last_op_time" data-order="asc">
+													升序
+												</a>
+												<a href="javascript:;" class="mdui-ripple sort-order-check" data-column="last_op_time" data-order="desc">
+													降序
+												</a>
+											</li>
+										</ul>
+									</li>
+									<li class="mdui-divider"></li>
+									<li class="mdui-menu-item" data-column="default">
+										<a href="javascript:void(0);" class="mdui-ripple default-check">默认</a>
+									</li>
+								</ul>
+								<button class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '排序'}" mdui-menu="{target: '#sort-menu',position:'bottom'}"><i class="mdui-icon material-icons">sort</i></button>
+								<button id="previewImages" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '预览本页所有图片'}"><i class="mdui-icon material-icons">panorama_wide_angle</i></button>
+								{{- if $.has_parent}}
+								{{- if $.is_admin_login}}
+								<a id="share" href="javascript:void(0)" mdui-menu="{target: '#share-menu',covered: false}" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '分享'}"><i class="mdui-icon material-icons">share</i></a>
+								{{- end}}
+								<ul id="share-menu" class="mdui-menu" data-fp="{{ $.full_path }}" data-file-type="0" data-aid="{{ $.account.Id }}">
+									<li class="mdui-divider"></li>
+									<li class="mdui-menu-item">
+										<img id="qrcode" src="" width="100%" />
+									</li>
+									<li class="mdui-divider"></li>
+									<li class="mdui-menu-item mdui-text-center">
+										<button id="copyShortUrl" class="mdui-btn mdui-btn-raised mdui-ripple mdui-btn-dense mdui-color-indigo">复制短链接</button>
+									</li>
+								</ul>
+								{{- end}}
+								<button id="copyAllLinks" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '复制全部下载链接'}"><i class="mdui-icon material-icons">content_copy</i></button>
+								<button class="mdui-btn mdui-btn-icon" id="theme-toggle" mdui-tooltip="{content: '明暗主题切换'}"><i class="mdui-icon material-icons">brightness_{{if eq $.theme "mdui-dark"}}5{{else}}4{{end}}</i></button>
+								<button class="mdui-btn mdui-btn-icon" id="layout-toggle" mdui-tooltip="{content: '布局切换'}"><i class="mdui-icon material-icons">{{$.layout}}</i></button>
+								<button class="mdui-btn mdui-btn-icon" id="history_play_list_btn" mdui-menu="{target: '#history_play_list_menu'}" mdui-tooltip="{content: '播放历史'}" style="display: none"><i class="mdui-icon material-icons">playlist_play</i></button>
+								<ul class="mdui-menu mdui-menu-cascade" id="history_play_list_menu"></ul>
+							</div>
+						</div>
+					</div>
+				</li>
+				{{- if $.has_pwd}}
+				<div class="mdui-card-media mdui-center" style="width: 350px; max-width: 100%;">
+					<div class="mdui-textfield mdui-textfield-floating-label{{if $.pwd_err_msg}} mdui-textfield-invalid{{- end}}">
+						<i id="inpsw-icon-lock" class="mdui-icon material-icons">lock</i>
+						<label class="mdui-textfield-label">请输入密码</label>
+						<input id="input-password" type="password" class="mdui-textfield-input" data-file-path="{{ $.pwd_path }}" required style="border-bottom: 1px solid rgba(0, 0, 0, 0.42); width: calc(100% - 95px);">
+						<a class="mdui-btn mdui-btn-icon mdui-icon" style="right: 0px;" href="javascript:promptPwd();">
+							<i class="mdui-icon material-icons" style="padding: 0px;">fingerprint</i>
+						</a>
+						{{- if $.pwd_err_msg}}
+						<div class="mdui-textfield-error">{{$.pwd_err_msg}}</div>
+						<script>
+							removePwd();
+						</script>
+						{{- end}}
+					</div>
+				</div>
+				{{- else}}
+				{{- if not $.fns}}
+				<div id="emptyList" class="mdui-valign" style="height: 500px;display:none!important">
+					<div class="mdui-center">
+						<img class="mdui-center" src="{{$.config.PathPrefix}}/static/img/empty-folder.png" style="width: 53px;height: 56px">
+						<p class="mdui-center">网盘空空如也</p>
+					</div>
+				</div>
+				{{- end}}
+				{{if ne $.layout "view_comfy"}}
+				<div class="mdui-row-md-9 mdui-grid-list">
+					{{- range $.fns}}
+					<div class="mdui-col icon-file-mdui" data-folder="{{.IsFolder}}" data-file-id="{{.FileId}}" data-file-type="{{.FileType}}" data-preview="{{$.config.EnablePreview}}" data-view-type="{{.ViewType}}" data-title="{{.FileName}}" data-url="{{$.config.PathPrefix}}{{.Path}}" style="padding: 3px">
+						<div class="mdui-grid-tile mdui-card mdui-hoverable">
+							<div class="mdui-card-media mdui-text-center">
+								{{- if and (.Thumbnail) (or (eq .ViewType "img") (eq .ViewType "video"))}}
+								<img class="mdui-center" src="{{.Thumbnail}}" style="height: 75px;width: 50%;margin-top: 5px">
+								{{- else}}
+								<i class="mdui-icon material-icons" style="font-size: 80px;cursor: default">{{iconclass .IsFolder .FileType}}</i>
+								{{- end}}
+							</div>
+							<div class="mdui-card-content mdui-text-center mdui-text-truncate" style="max-width: 185px;" title="{{.FileName}}">{{.FileName}}</div>
+						</div>
+					</div>
+					{{- end}}
+				</div>
+				{{- else}}
+				{{- range $.fns}}
+				<li class="mdui-list-item mdui-ripple">
+					<div class="mdui-list-item-content icon-file-mdui" data-folder="{{.IsFolder}}" data-file-id="{{.FileId}}" data-file-type="{{.FileType}}" data-preview="{{$.config.EnablePreview}}" data-view-type="{{.ViewType}}" data-title="{{.FileName}}" data-url="{{$.config.PathPrefix}}{{.Path}}">
+						<div class="mdui-list-item-title wordWrap">
+							{{- if .IsFolder}}
+							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">folder_open</i> {{.FileName}}
+							{{- else}}
+							<i class="mdui-icon material-icons" style="margin: -3px 5px 0px 0px;">
+								{{iconclass .IsFolder .FileType}}
+							</i> {{.FileName}} <a href="javascript:void(0)" data-path="{{$.config.PathPrefix}}{{.Path}}" data-clipboard-action="copy" class="copyBtn mdui-icon material-icons mdui-text-color-theme-icon" mdui-tooltip="{content: '复制链接'}" style="font-size: x-small">content_copy</a>
+							<a href="{{$.config.PathPrefix}}{{.Path}}" class="mdui-float-right mdui-icon material-icons mdui-text-color-theme-icon" style="font-size: 30px">file_download</a>
+							{{- end}}
+						</div>
+						{{- if .IsFolder}}
+						{{- else}}
+						<div class="mdui-list-item-text mdui-list-item-one-line">
+							{{.SizeFmt}} / {{.LastOpTime}}
+						</div>
+						{{- end}}
+						{{- if $.search_key}}
+						<div class="mdui-list-item-text mdui-list-item-one-line">
+							{{$.config.PathPrefix}}{{.Path}}
+						</div>
+						{{- end}}
+					</div>
+				</li>
+				{{- end}}
+				{{- end}}
+				{{- end}}
+			</ul>
+		</div>
+		{{- if and (not $.has_pwd) (eq $.config.Readme "1")}}
+		<div id="content" class="md-content mdui-typo mdui-shadow-2" style="display: none;padding: 15px;margin: 10px;">
+			<div class="mdui-chip readme">
+				<span class="mdui-chip-icon">M</span>
+				<span class="mdui-chip-title">README.md</span>
+			</div>
+			<hr class="readme" />
+			<script>
+				var fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "{{$.config.PathPrefix}}/api/v3/public/raw{{$.account_path}}{{$.path}}/README.md");
+				if("{{$.path}}" == "/"){
+					fullUrl = encodeURI(window.location.protocol + "//"+window.location.host + "{{$.config.PathPrefix}}/api/v3/public/raw{{$.account_path}}{{$.path}}README.md");
+				}
+				var key = md5(fullUrl);
+				var c = localStorage.getItem(key);
+				if(c && c != null && c != ""){
+					$("#content").append(marked.parse(c));
+					$("table").addClass("mdui-table");
+					$("#content").toggle();
+					mdContent(fullUrl, key, "content", false);
+				}else{
+					mdContent(fullUrl, key, "content", true);
+				}
+			</script>
+		</div>
+		{{- else}}
+		<script>$(function () { $("#emptyList").toggle();})</script>
+		{{- end}}
+		<div id="image-preview-list" style="display: none;"></div>
+	</div>
+	{{- if not $.has_pwd}}
+	<a id="go-to-top" href="javascript:void(0)" class="mdui-fab mdui-fab-fixed mdui-ripple mdui-btn-dense" style="font-size: x-small"><i class="mdui-icon material-icons">vertical_align_top</i></a>
+	{{- end}}
+	<div class="mdui-text-center mdui-typo footer">
+		{{- if eq $.config.Footer ""}}
+		©{{Year}} <a href="https://github.com/px-org/PanIndex" target="_blank">PanIndex</a>. All rights reserved.
+		{{- else}}
+		{{$.config.Footer | unescaped}}
+		{{- end}}
+	</div>
+</div>
+</body>
+</html>

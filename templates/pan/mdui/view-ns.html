@@ -1,0 +1,18 @@
+{{define "templates/pan/mdui/view-ns.html"}}
+    {{template "templates/pan/mdui/view-base.html" .}}
+{{end}}
+{{define "content-ns"}}
+    <div class="mdui-shadow-2 mdui-clearfix br mdui-valign mdui-typo" style="padding: 15px;margin: 10px;min-height: 300px">
+        <div class="mdui-center mdui-typo-display-1-opacity">
+            该文件格式不支持预览
+            <button id="downButton" class="mdui-btn mdui-color-indigo mdui-ripple mdui-center">
+                下载 {{ (index $.fns 0).SizeFmt }}
+            </button>
+        </div>
+    </div>
+    <script>
+        $('#downButton').on('click', function(ev) {
+            window.location.href = $("#view_down_link").attr("data-path");
+        });
+    </script>
+{{end}}
